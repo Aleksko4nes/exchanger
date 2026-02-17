@@ -13,9 +13,13 @@ import ru.kocha.exchanger_v1.utils.ErrorHandler;
 import ru.kocha.exchanger_v1.utils.RateParser;
 import ru.kocha.exchanger_v1.utils.Validator;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @WebServlet("/exchangeRate/*")
@@ -76,9 +80,12 @@ public class ExchangeRateServlet extends HttpServlet {
                 return;
             }
 
+            resp.setContentType("application/json");
             String from = path.get().substring(0,3);
             String to = path.get().substring(3);
-            Optional<BigDecimal> rate = RateParser.parseRate(req.getParameter("rate"));
+            String rateValue = extractRateFromBody(req);
+            Optional<BigDecimal> rate = RateParser.parseRate(rateValue);
+
             if (rate.isEmpty()) {
                 ErrorHandler.sendError(HttpServletResponse.SC_BAD_REQUEST, "Отсутствует нужно поле формы", resp);
                 return;
@@ -91,10 +98,30 @@ public class ExchangeRateServlet extends HttpServlet {
             }
 
             String message = mapper.writeValueAsString(exchangeRate.get());
-            PrintWriter out = resp.getWriter();
-            out.println(message);
+            resp.getWriter().println(message);
         } catch (Exception e) {
             ErrorHandler.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), resp);
         }
+    }
+    private String extractRateFromBody(HttpServletRequest req) throws IOException {
+
+        BufferedReader reader = req.getReader();
+        StringBuilder body = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            body.append(line);
+        }
+
+        String requestBody = body.toString();
+
+        String[] pairs = requestBody.split("&");
+        for (String pair : pairs) {
+            String[] keyValue = pair.split("=");
+            if (keyValue.length == 2 && keyValue[0].equals("rate")) {
+                return URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8);
+            }
+        }
+
+        return null;
     }
 }

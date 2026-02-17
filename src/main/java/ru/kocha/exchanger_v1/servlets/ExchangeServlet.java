@@ -39,7 +39,7 @@ public class ExchangeServlet extends HttpServlet {
                 ErrorHandler.sendError(HttpServletResponse.SC_BAD_REQUEST, "Отсутствует нужное поле формы", resp);
                 return;
             }
-
+            resp.setContentType("application/json");
             String message = mapper.writeValueAsString(service.convert(base.get(), target.get(), amount.get()));
             PrintWriter out = resp.getWriter();
             out.println(message);

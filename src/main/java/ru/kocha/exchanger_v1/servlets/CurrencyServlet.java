@@ -46,7 +46,7 @@ import java.util.Optional;
                 }
 
                 String jsonResponse = mapper.writeValueAsString(currency.get());
-                resp.getWriter().write(jsonResponse);
+                resp.getWriter().println(jsonResponse);
 
             } catch (SQLException e) {
                 ErrorHandler.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "База данных не доступна", resp);

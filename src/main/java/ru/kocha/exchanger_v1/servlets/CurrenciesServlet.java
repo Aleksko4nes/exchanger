@@ -38,6 +38,7 @@ public class CurrenciesServlet extends HttpServlet {
             String fullname = req.getParameter("name");
             String sign = req.getParameter("sign");
 
+
             if (code.isEmpty() || fullname.isEmpty() || sign.isEmpty()) {
                 ErrorHandler.sendError(HttpServletResponse.SC_BAD_REQUEST,
                         "Отсутствует нужное поле формы или код валюты не прошёл валидацию",
@@ -49,8 +50,8 @@ public class CurrenciesServlet extends HttpServlet {
             Optional<Currency> currency = repository.addNewCurrency(validCode, fullname, sign);
 
             if (currency.isPresent()) {
-                String jsonResponse = mapper.writeValueAsString(currency);
-                resp.getWriter().write(jsonResponse);
+                String jsonResponse = mapper.writeValueAsString(currency.get());
+                resp.getWriter().println(jsonResponse);
             }
 
         } catch (SQLException e) {
@@ -68,9 +69,10 @@ public class CurrenciesServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
+            resp.setContentType("application/json");
             List<Currency> currencies = repository.getAllCurrencies();
             String jsonResponse = mapper.writeValueAsString(currencies);
-            resp.getWriter().write(jsonResponse);
+            resp.getWriter().println(jsonResponse);
         } catch (IOException e) {
             ErrorHandler.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error", resp);
         } catch (SQLException e) {

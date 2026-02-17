@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourcePerFileMappings">
-    <file url="file://$PROJECT_DIR$/src/main/java/ru/kocha/exchanger_v1/repository/CurrencyRepositoryImpl.java" value="fad5721f-3a7e-41fa-8897-00429c1862cf" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/fad5721f-3a7e-41fa-8897-00429c1862cf/console.sql" value="fad5721f-3a7e-41fa-8897-00429c1862cf" />
   </component>
 </project>

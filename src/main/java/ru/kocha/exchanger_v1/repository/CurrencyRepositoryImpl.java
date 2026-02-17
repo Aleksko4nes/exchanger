@@ -13,11 +13,11 @@ import java.util.Optional;
 
 public class CurrencyRepositoryImpl implements CurrencyRepository {
     private final static String SELECT_ALl_CURRENCIES = """
-            select * from currencies
+            select id, code, fullname as name, sign from currencies
             """;
 
     private final static String SELECT_CURRENCY_BY_CODE = """
-            SELECT * FROM currencies WHERE code = ?
+            SELECT id, code, fullname as name, sign FROM currencies WHERE code = ?
             """;
 
     private final static String ADD_NEW_CURRENCY = """
@@ -86,7 +86,7 @@ public class CurrencyRepositoryImpl implements CurrencyRepository {
         return new Currency(
                 rs.getLong("id"),
                 rs.getString("code"),
-                rs.getString("fullname"),
+                rs.getString("name"),
                 rs.getString("sign")
         );
     }
