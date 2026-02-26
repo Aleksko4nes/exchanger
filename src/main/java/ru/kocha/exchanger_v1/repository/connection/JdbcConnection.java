@@ -20,7 +20,7 @@ public final class JdbcConnection {
                     PropertiesUtil.getProperty(USERNAME),
                     PropertiesUtil.getProperty(PASSWORD));
         } catch (SQLException e) {
-            throw new RuntimeException("Something went wrong when trying to connect to database.", e);
+            throw new RuntimeException("Something wen t wrong when trying to connect to database.", e);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
