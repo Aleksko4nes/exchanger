@@ -23,6 +23,7 @@ public class CurrencyRepositoryImpl implements CurrencyRepository {
     private final static String ADD_NEW_CURRENCY = """
             INSERT INTO currencies (code, fullname, sign) VALUES (?, ?, ?)
             """;
+
     @Override
     public List<Currency> getAllCurrencies() throws SQLException {
 

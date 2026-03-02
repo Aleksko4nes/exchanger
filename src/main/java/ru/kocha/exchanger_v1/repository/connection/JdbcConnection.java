@@ -1,29 +1,30 @@
 package ru.kocha.exchanger_v1.repository.connection;
 
-import ru.kocha.exchanger_v1.utils.PropertiesUtil;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public final class JdbcConnection {
 
-    private static final String URL = "database.url";
-    private static final String USERNAME = "database.username";
-    private static final String PASSWORD =  "database.password";
+    private static final String URL = System.getenv("POSTGRES_URL");
+    private static final String USERNAME = System.getenv("POSTGRES_USERNAME");
+    private static final String PASSWORD = System.getenv("POSTGRES_PASSWORD");
 
-    public static Connection getConnection() {
-        try {
-            Class.forName("org.postgresql.Driver");
-            return DriverManager.getConnection(
-                    PropertiesUtil.getProperty(URL),
-                    PropertiesUtil.getProperty(USERNAME),
-                    PropertiesUtil.getProperty(PASSWORD));
-        } catch (SQLException e) {
-            throw new RuntimeException("Something wen t wrong when trying to connect to database.", e);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+    private static HikariConfig config = new HikariConfig();
+    private static HikariDataSource ds;
+
+    static {
+        config.setJdbcUrl(URL);
+        config.setUsername(USERNAME);
+        config.setPassword(PASSWORD);
+        config.setDriverClassName("org.postgresql.Driver");
+        ds = new HikariDataSource(config);
+    }
+
+    public static Connection getConnection() throws SQLException {
+       return ds.getConnection();
     }
 
     private  JdbcConnection() {}

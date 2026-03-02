@@ -3,9 +3,9 @@ services:
     image: postgres
     container_name: exchanger-postgres
     environment:
-      POSTGRES_USER: ${database_username}
-      POSTGRES_PASSWORD: ${database_password}
-      POSTGRES_DB: ${database_name}
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DATABASE_NAME}
     ports:
       - "5432:5432"
     volumes:
@@ -26,9 +26,9 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      database_url: ${database_url}
-      database_username: ${database_username}
-      database_password: ${database_password}
+      POSTGRES_URL: ${POSTGRES_URL}
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "8080:8080"
     networks:

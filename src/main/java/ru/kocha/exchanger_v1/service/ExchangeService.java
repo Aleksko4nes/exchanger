@@ -1,6 +1,5 @@
 package ru.kocha.exchanger_v1.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import ru.kocha.exchanger_v1.entities.ExchangeRate;
 import ru.kocha.exchanger_v1.entities.ExchangeResponse;
 import ru.kocha.exchanger_v1.repository.ExchangeRateRepository;
