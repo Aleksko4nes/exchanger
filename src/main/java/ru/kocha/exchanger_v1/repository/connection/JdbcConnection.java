@@ -8,56 +8,37 @@ import java.sql.SQLException;
 
 public final class JdbcConnection {
 
-    private static final String URL = getRequiredEnv("POSTGRES_URL");
-    private static final String USERNAME = getRequiredEnv("POSTGRES_USERNAME");
-    private static final String PASSWORD = getRequiredEnv("POSTGRES_PASSWORD");
+    private static final String URL = System.getenv("POSTGRES_URL");
+    private static final String USERNAME = System.getenv("POSTGRES_NAME");
+    private static final String PASSWORD = System.getenv("POSTGRES_PASSWORD");
 
-    private static final Long THIRTY_SECOND = 30L;
-    private static final Long TEN_MINUTE = 60L;
-    private static final Long THIRTY_MINUTE = 1800L;
+    private static final Long THIRTY_SECOND = 30000L;
+    private static final Long TEN_MINUTE = 60000L;
+    private static final Long THIRTY_MINUTE = 1800000L;
 
-    private static HikariConfig config = new HikariConfig();
-    private static HikariDataSource ds;
+    private final static HikariConfig CONFIG = new HikariConfig();
+    private final static HikariDataSource DS;
 
     static {
-        config.setJdbcUrl(URL);
-        config.setUsername(USERNAME);
-        config.setPassword(PASSWORD);
-        config.setDriverClassName("org.postgresql.Driver");
+        System.out.println(URL);
+        System.out.println(USERNAME);
+        System.out.println(PASSWORD);
+        CONFIG.setJdbcUrl(URL);
+        CONFIG.setUsername(USERNAME);
+        CONFIG.setPassword(PASSWORD);
+        CONFIG.setDriverClassName("org.postgresql.Driver");
 
-        config.setMaximumPoolSize(10);
-        config.setMinimumIdle(2);
-        config.setConnectionTimeout(THIRTY_SECOND);
-        config.setIdleTimeout(TEN_MINUTE);
-        config.setMaxLifetime(THIRTY_MINUTE);
+        CONFIG.setMaximumPoolSize(10);
+        CONFIG.setMinimumIdle(2);
+        CONFIG.setConnectionTimeout(THIRTY_SECOND);
+        CONFIG.setIdleTimeout(TEN_MINUTE);
+        CONFIG.setMaxLifetime(THIRTY_MINUTE);
 
-        ds = new HikariDataSource(config);
-
-        try (Connection connection = ds.getConnection()) {
-            System.out.println("Database connection pool initialized successfully");
-        } catch (SQLException e) {
-            System.err.println("Database connection pool initialization failed");
-            throw new RuntimeException("Database connection failed" + e);
-        }
+        DS = new HikariDataSource(CONFIG);
     }
 
     public static Connection getConnection() throws SQLException {
-       return ds.getConnection();
-    }
-
-    private static String getRequiredEnv(String env) {
-        String value = System.getenv(env);
-        if (value == null || value.isEmpty()) {
-            throw new IllegalArgumentException("Missing required environment variable " + env);
-        }
-        return value;
-    }
-
-    public static void closeConnection() {
-        if (ds != null || !ds.isClosed()) {
-            ds.close();
-            System.out.println("Database connection closed successfully");
-        }
+       return DS.getConnection();
     }
 
     private  JdbcConnection() {}
