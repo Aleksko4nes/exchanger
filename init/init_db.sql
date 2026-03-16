@@ -1,7 +1,7 @@
 Create table currencies (
     id BIGSERIAL primary key,
     code Varchar(4) not null unique,
-    fullname varchar not null,
+    full_name varchar not null,
     sign varchar(3) not null
 );
 

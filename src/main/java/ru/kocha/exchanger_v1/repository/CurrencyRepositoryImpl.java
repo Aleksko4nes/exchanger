@@ -1,7 +1,7 @@
 package ru.kocha.exchanger_v1.repository;
 
 import ru.kocha.exchanger_v1.entities.Currency;
-import ru.kocha.exchanger_v1.repository.connection.JdbcConnection;
+import ru.kocha.exchanger_v1.repository.connection.DataSource;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -13,39 +13,35 @@ import java.util.Optional;
 
 public class CurrencyRepositoryImpl implements CurrencyRepository {
     private final static String SELECT_ALl_CURRENCIES = """
-            select id, code, fullname as name, sign from currencies
+            select id, code, full_name as name, sign from currencies
             """;
 
     private final static String SELECT_CURRENCY_BY_CODE = """
-            SELECT id, code, fullname as name, sign FROM currencies WHERE code = ?
+            SELECT id, code, full_name as name, sign FROM currencies WHERE code = ?
             """;
 
     private final static String ADD_NEW_CURRENCY = """
-            INSERT INTO currencies (code, fullname, sign) VALUES (?, ?, ?)
+            INSERT INTO currencies (code, full_name, sign) VALUES (?, ?, ?)
             """;
 
     @Override
-    public List<Currency> getAllCurrencies() throws SQLException {
+    public List<Currency> getAllCurrencies(Connection connection) throws SQLException {
 
         List<Currency> currencies = new ArrayList<>();
 
-        try (Connection connection = JdbcConnection.getConnection();
-             var ps = connection.prepareStatement(SELECT_ALl_CURRENCIES)) {
-            try (ResultSet rs = ps.executeQuery()) {
+        try (var ps = connection.prepareStatement(SELECT_ALl_CURRENCIES);
+             ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Currency currency = createCurrency(rs);
-                    currencies.add(currency);
-                }
+                    currencies.add(createCurrency(rs));
             }
         }
         return currencies;
     }
 
     @Override
-    public Optional<Currency> getCurrencyByCode(String code) throws SQLException {
+    public Optional<Currency> getCurrencyByCode(String code, Connection connection) throws SQLException {
 
-        try (var connection = JdbcConnection.getConnection();
-             var ps = connection.prepareStatement(SELECT_CURRENCY_BY_CODE)) {
+        try (var ps = connection.prepareStatement(SELECT_CURRENCY_BY_CODE)) {
             ps.setString(1, code);
 
             try (ResultSet rs = ps.executeQuery()) {
@@ -58,10 +54,9 @@ public class CurrencyRepositoryImpl implements CurrencyRepository {
     }
 
     @Override
-    public Optional<Currency> addNewCurrency(String code, String fullname, String sign) throws SQLException {
+    public Optional<Currency> addNewCurrency(String code, String fullname, String sign, Connection connection) throws SQLException {
 
-        try (var connection = JdbcConnection.getConnection();
-             var ps = connection.prepareStatement(ADD_NEW_CURRENCY, Statement.RETURN_GENERATED_KEYS)) {
+        try (var ps = connection.prepareStatement(ADD_NEW_CURRENCY, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, code);
             ps.setString(2, fullname);
             ps.setString(3, sign);

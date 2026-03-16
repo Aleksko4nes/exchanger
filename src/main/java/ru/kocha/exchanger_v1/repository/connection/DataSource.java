@@ -6,7 +6,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public final class JdbcConnection {
+public final class DataSource {
 
     private static final String URL = System.getenv("POSTGRES_URL");
     private static final String USERNAME = System.getenv("POSTGRES_NAME");
@@ -17,12 +17,9 @@ public final class JdbcConnection {
     private static final Long THIRTY_MINUTE = 1800000L;
 
     private final static HikariConfig CONFIG = new HikariConfig();
-    private final static HikariDataSource DS;
+    private static final HikariDataSource DATA_SOURCE;
 
     static {
-        System.out.println(URL);
-        System.out.println(USERNAME);
-        System.out.println(PASSWORD);
         CONFIG.setJdbcUrl(URL);
         CONFIG.setUsername(USERNAME);
         CONFIG.setPassword(PASSWORD);
@@ -34,12 +31,10 @@ public final class JdbcConnection {
         CONFIG.setIdleTimeout(TEN_MINUTE);
         CONFIG.setMaxLifetime(THIRTY_MINUTE);
 
-        DS = new HikariDataSource(CONFIG);
+        DATA_SOURCE = new HikariDataSource(CONFIG);
     }
 
-    public static Connection getConnection() throws SQLException {
-       return DS.getConnection();
+    public Connection getConnection() throws SQLException {
+        return DATA_SOURCE.getConnection();
     }
-
-    private  JdbcConnection() {}
 }

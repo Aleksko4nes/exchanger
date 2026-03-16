@@ -2,9 +2,10 @@ package ru.kocha.exchanger_v1.repository;
 
 import ru.kocha.exchanger_v1.entities.Currency;
 import ru.kocha.exchanger_v1.entities.ExchangeRate;
-import ru.kocha.exchanger_v1.repository.connection.JdbcConnection;
+import ru.kocha.exchanger_v1.repository.connection.DataSource;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -14,59 +15,59 @@ import java.util.Optional;
 public class ExchangeRateRepositoryImpl implements ExchangeRateRepository {
 
     private final static String GET_ALL_EXCHANGE_RATES = """
-                Select er.id,
-                bc.id as base_id,
-                bc.code as base_code,
-                bc.fullname as base_fullname,
-                bc.sign as base_sign,
-                tc.id as target_id,
-                tc.code as target_code,
-                tc.fullname as target_fullname,
-                tc.sign as target_sign,
-                er.rate
-                From exchange_rate er
-                Join currencies bc ON bc.code = er.base_currency_code
-                Join currencies tc ON tc.code = er.target_currency_code
-                """;
+            Select er.id,
+            bc.id as base_id,
+            bc.code as base_code,
+            bc.full_name as base_fullname,
+            bc.sign as base_sign,
+            tc.id as target_id,
+            tc.code as target_code,
+            tc.full_name as target_fullname,
+            tc.sign as target_sign,
+            er.rate
+            From exchange_rate er
+            Join currencies bc ON bc.code = er.base_currency_code
+            Join currencies tc ON tc.code = er.target_currency_code
+            """;
 
     private final static String GET_EXCHANGE_RATE_BY_CODE = """
-                Select er.id,
-                bc.id as base_id,
-                bc.code as base_code,
-                bc.fullname as base_fullname,
-                bc.sign as base_sign,
-                tc.id as target_id,
-                tc.code as target_code,
-                tc.fullname as target_fullname,
-                tc.sign as target_sign,
-                er.rate
-                From exchange_rate er
-                Join currencies bc ON bc.code = er.base_currency_code
-                Join currencies tc ON tc.code = er.target_currency_code
-                Where bc.code = ? AND tc.code = ?
-                """;
+            Select er.id,
+            bc.id as base_id,
+            bc.code as base_code,
+            bc.full_name as base_fullname,
+            bc.sign as base_sign,
+            tc.id as target_id,
+            tc.code as target_code,
+            tc.full_name as target_fullname,
+            tc.sign as target_sign,
+            er.rate
+            From exchange_rate er
+            Join currencies bc ON bc.code = er.base_currency_code
+            Join currencies tc ON tc.code = er.target_currency_code
+            Where bc.code = ? AND tc.code = ?
+            """;
 
     private final static String ADD_NEW_EXCHANGE_RATE = """
-                INSERT INTO exchange_rate (base_currency_code, target_currency_code, rate)
-                VALUES (?, ?, ?)
-                """;
+            INSERT INTO exchange_rate (base_currency_code, target_currency_code, rate)
+            VALUES (?, ?, ?)
+            """;
 
     private final static String UPDATE_EXCHANGE_RATE = """
-                UPDATE exchange_rate SET rate = ?
-                WHERE base_currency_code = ?
-                AND target_currency_code = ?
-                """;
+            UPDATE exchange_rate SET rate = ?
+            WHERE base_currency_code = ?
+            AND target_currency_code = ?
+            """;
 
     private final static String GET_RATES_WITH_USD_BASE = """
             SELECT 
                 er.id AS id,
                 bc.id AS base_id,
                 bc.code AS base_code,
-                bc.fullname AS base_fullname,
+                bc.full_name AS base_fullname,
                 bc.sign AS base_sign,
                 tc.id AS target_id,
                 tc.code AS target_code,
-                tc.fullname AS target_fullname,
+                tc.full_name AS target_fullname,
                 tc.sign AS target_sign,
                 er.rate AS rate
                 FROM exchange_rate er
@@ -79,28 +80,23 @@ public class ExchangeRateRepositoryImpl implements ExchangeRateRepository {
             """;
 
     @Override
-    public List<ExchangeRate> getExchangeRates() {
+    public List<ExchangeRate> getExchangeRates(Connection connection) throws SQLException {
         List<ExchangeRate> exchangeRates = new ArrayList<>();
 
-        try (var conn = JdbcConnection.getConnection();
-             var ps = conn.prepareStatement(GET_ALL_EXCHANGE_RATES)) {
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    ExchangeRate exchangeRate = createExchangeRate(rs);
-                    exchangeRates.add(exchangeRate);
-                }
+        try (var ps = connection.prepareStatement(GET_ALL_EXCHANGE_RATES);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                ExchangeRate exchangeRate = createExchangeRate(rs);
+                exchangeRates.add(exchangeRate);
             }
             return exchangeRates;
-        } catch (SQLException e) {
-            throw new RuntimeException("Something went wrong while getting all rates");
         }
     }
 
     @Override
-    public Optional<ExchangeRate> getExchangeRateByCode(String baseCode, String targetCode) throws SQLException {
+    public Optional<ExchangeRate> getExchangeRateByCode(String baseCode, String targetCode, Connection connection) throws SQLException {
 
-        try (var conn = JdbcConnection.getConnection();
-             var ps = conn.prepareStatement(GET_EXCHANGE_RATE_BY_CODE)) {
+        try (var ps = connection.prepareStatement(GET_EXCHANGE_RATE_BY_CODE)) {
             ps.setString(1, baseCode);
             ps.setString(2, targetCode);
 
@@ -115,32 +111,30 @@ public class ExchangeRateRepositoryImpl implements ExchangeRateRepository {
     }
 
     @Override
-    public Optional<ExchangeRate> addNewExchangeRate(String baseCode, String targetCode, BigDecimal rate) throws SQLException {
+    public Optional<ExchangeRate> addNewExchangeRate(String baseCode, String targetCode, BigDecimal rate, Connection connection) throws SQLException {
 
-        try (var conn = JdbcConnection.getConnection();
-        var ps = conn.prepareStatement(ADD_NEW_EXCHANGE_RATE)) {
+        try (var ps = connection.prepareStatement(ADD_NEW_EXCHANGE_RATE)) {
             ps.setString(1, baseCode);
             ps.setString(2, targetCode);
             ps.setBigDecimal(3, rate);
 
             ps.executeUpdate();
 
-            return getExchangeRateByCode(baseCode, targetCode);
+            return getExchangeRateByCode(baseCode, targetCode, connection);
         }
     }
 
     @Override
-    public Optional<ExchangeRate> updateExchangerRate(String baseCode, String targetCode, BigDecimal rate) {
+    public Optional<ExchangeRate> updateExchangerRate(String baseCode, String targetCode, BigDecimal rate, Connection connection) {
 
-        try (var conn = JdbcConnection.getConnection();
-            var ps = conn.prepareStatement(UPDATE_EXCHANGE_RATE)) {
+        try (var ps = connection.prepareStatement(UPDATE_EXCHANGE_RATE)) {
             ps.setBigDecimal(1, rate);
             ps.setString(2, baseCode);
             ps.setString(3, targetCode);
 
             ps.executeUpdate();
 
-            return getExchangeRateByCode(baseCode, targetCode);
+            return getExchangeRateByCode(baseCode, targetCode, connection);
 
         } catch (SQLException e) {
             throw new RuntimeException("Something went wrong while updating new rate");
@@ -148,11 +142,10 @@ public class ExchangeRateRepositoryImpl implements ExchangeRateRepository {
     }
 
     @Override
-    public List<ExchangeRate> findByCodeWithUsdBase(String baseCurrencyCode, String targetCurrencyCode) {
+    public List<ExchangeRate> findByCodeWithUsdBase(String baseCurrencyCode, String targetCurrencyCode, Connection connection) {
 
         List<ExchangeRate> rates = new ArrayList<>();
-        try (var conn = JdbcConnection.getConnection();
-        var ps = conn.prepareStatement(GET_RATES_WITH_USD_BASE)) {
+        try (var ps = connection.prepareStatement(GET_RATES_WITH_USD_BASE)) {
             ps.setString(1, baseCurrencyCode);
             ps.setString(2, targetCurrencyCode);
 
@@ -168,7 +161,7 @@ public class ExchangeRateRepositoryImpl implements ExchangeRateRepository {
         }
     }
 
-    private ExchangeRate createExchangeRate (ResultSet rs) throws SQLException {
+    private ExchangeRate createExchangeRate(ResultSet rs) throws SQLException {
         return new ExchangeRate(
                 rs.getLong("id"),
                 new Currency(

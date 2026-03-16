@@ -55,15 +55,15 @@ public class ExchangeRateServlet extends HttpServlet {
             String from = path.get().substring(0,3);
             String to = path.get().substring(3);
 
-            Optional<ExchangeRate> exchangeRate = repository.getExchangeRateByCode(from, to);
-            if (exchangeRate.isEmpty()) {
-                ErrorHandler.sendError(HttpServletResponse.SC_NOT_FOUND, "Обменный курс не найден", resp);
-                return;
-            }
-
-            String message = mapper.writeValueAsString(exchangeRate.get());
-            PrintWriter out = resp.getWriter();
-            out.println(message);
+//           // Optional<ExchangeRate> exchangeRate = repository.getExchangeRateByCode(from, to);
+//            if (exchangeRate.isEmpty()) {
+//                ErrorHandler.sendError(HttpServletResponse.SC_NOT_FOUND, "Обменный курс не найден", resp);
+//                return;
+//            }
+//
+//            String message = mapper.writeValueAsString(exchangeRate.get());
+//            PrintWriter out = resp.getWriter();
+//            out.println(message);
         } catch (Exception e) {
             ErrorHandler.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), resp);
         }
@@ -90,18 +90,21 @@ public class ExchangeRateServlet extends HttpServlet {
                 return;
             }
 
-            Optional<ExchangeRate> exchangeRate = repository.updateExchangerRate(from, to, rate.get());
-            if (exchangeRate.isEmpty()) {
-                ErrorHandler.sendError(HttpServletResponse.SC_NOT_FOUND, "Валютная пара отсутствует в базе данных", resp);
-                return;
-            }
-
-            String message = mapper.writeValueAsString(exchangeRate.get());
-            resp.getWriter().println(message);
+//            Optional<ExchangeRate> exchangeRate = repository.updateExchangerRate(from, to, rate.get());
+//            if (exchangeRate.isEmpty()) {
+//                ErrorHandler.sendError(HttpServletResponse.SC_NOT_FOUND, "Валютная пара отсутствует в базе данных", resp);
+//                return;
+//            }
+//
+//            String message = mapper.writeValueAsString(exchangeRate.get());
+//            resp.getWriter().println(message);
         } catch (Exception e) {
             ErrorHandler.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), resp);
         }
     }
+
+
+
     private String extractRateFromBody(HttpServletRequest req) throws IOException {
 
         BufferedReader reader = req.getReader();
