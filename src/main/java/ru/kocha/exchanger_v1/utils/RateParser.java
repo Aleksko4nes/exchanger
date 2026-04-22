@@ -1,24 +1,35 @@
 package ru.kocha.exchanger_v1.utils;
 
+import ru.kocha.exchanger_v1.exception.ExceptionMessage;
+import ru.kocha.exchanger_v1.exception.ValidationException;
+
 import java.math.BigDecimal;
 import java.util.Optional;
 
 public class RateParser {
-    public static Optional<BigDecimal> parseRate(String rate){
-        if (rate == null || rate.isEmpty()){
-            return Optional.empty();
-        }
-        String regex = "^-?\\d+(\\.\\d+)?$";
+    public static BigDecimal parseRate(String rate){
 
+        if (rate == null || rate.isEmpty()){
+            throw new ValidationException(ExceptionMessage.RATE_IS_NULL);
+        }
+
+        String regex = "^-?\\d+(\\.\\d+)?$";
         if (!rate.matches(regex)) {
-            return Optional.empty();
+            throw new ValidationException(ExceptionMessage.INVALID_RATE);
         }
 
         try {
             double rateDouble = Double.parseDouble(rate);
-            return Optional.of(BigDecimal.valueOf(rateDouble));
+            return BigDecimal.valueOf(rateDouble);
+
         }  catch (NumberFormatException e) {
-            return Optional.empty();
+            throw new ValidationException(ExceptionMessage.INVALID_RATE);
         }
+    }
+
+    public static BigDecimal parseAndValidateRate(String rate) {
+        BigDecimal rateDouble = parseRate(rate);
+        Validator.validateExchangeRateValue(rateDouble);
+        return rateDouble;
     }
 }

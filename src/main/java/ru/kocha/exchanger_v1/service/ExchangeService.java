@@ -1,7 +1,10 @@
 package ru.kocha.exchanger_v1.service;
 
+import ru.kocha.exchanger_v1.dto.request.ExchangeRequest;
 import ru.kocha.exchanger_v1.entities.ExchangeRate;
-import ru.kocha.exchanger_v1.dto.ExchangeResponse;
+import ru.kocha.exchanger_v1.dto.response.ExchangeResponse;
+import ru.kocha.exchanger_v1.exception.ExceptionMessage;
+import ru.kocha.exchanger_v1.exception.TransactionException;
 import ru.kocha.exchanger_v1.repository.ExchangeRateRepository;
 import ru.kocha.exchanger_v1.repository.UnitOfWork;
 
@@ -23,11 +26,17 @@ public class ExchangeService {
         this.unitOfWork = unitOfWork;
     }
 
-    public ExchangeResponse convert(String baseCurrencyCode,
-                                    String targetCurrencyCode,
-                                    BigDecimal amount) throws SQLException {
+    public ExchangeResponse convert(ExchangeRequest request)  {
+        String baseCurrencyCode = request.from();
+        String targetCurrencyCode = request.to();
+        BigDecimal amount = request.amount();
 
-        ExchangeRate exchangeRate = getExchangeRate(baseCurrencyCode, targetCurrencyCode).orElseThrow();
+        ExchangeRate exchangeRate;
+        try {
+            exchangeRate = getExchangeRate(baseCurrencyCode, targetCurrencyCode).orElseThrow();
+        } catch (SQLException e) {
+            throw new TransactionException(ExceptionMessage.CONVERT_EXCEPTION, 500);
+        }
         BigDecimal convertedAmount = amount.multiply(exchangeRate.getRate()
                 .setScale(2, RoundingMode.HALF_EVEN));
 

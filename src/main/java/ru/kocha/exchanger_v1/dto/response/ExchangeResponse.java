@@ -1,4 +1,4 @@
-package ru.kocha.exchanger_v1.dto;
+package ru.kocha.exchanger_v1.dto.response;
 
 import ru.kocha.exchanger_v1.entities.Currency;
 

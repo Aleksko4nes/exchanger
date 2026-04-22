@@ -1,4 +1,4 @@
-package ru.kocha.exchanger_v1.utils;
+package ru.kocha.exchanger_v1.listener;
 
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;

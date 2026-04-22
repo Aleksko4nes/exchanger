@@ -1,7 +1,10 @@
 package ru.kocha.exchanger_v1.service;
 
-import ru.kocha.exchanger_v1.dto.CurrencyRequestDto;
+import ru.kocha.exchanger_v1.dto.request.CurrencyRequestDto;
+import ru.kocha.exchanger_v1.dto.response.CurrencyResponseDto;
 import ru.kocha.exchanger_v1.entities.Currency;
+import ru.kocha.exchanger_v1.exception.ExceptionMessage;
+import ru.kocha.exchanger_v1.exception.TransactionException;
 import ru.kocha.exchanger_v1.repository.CurrencyRepository;
 import ru.kocha.exchanger_v1.repository.UnitOfWork;
 
@@ -9,6 +12,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class CurrencyService {
     private final CurrencyRepository repository;
@@ -19,67 +23,76 @@ public class CurrencyService {
         this.unitOfWork = unitOfWork;
     }
 
-    public List<Currency> getCurrencies() {
-        List<Currency> currencies;
+    public List<CurrencyResponseDto> getCurrencies() {
+
         try {
             unitOfWork.start();
             Connection connection = unitOfWork.getConnection();
-            currencies = repository.getAllCurrencies(connection);
+            List<Currency> currencies = repository.getAllCurrencies(connection);
             unitOfWork.commit();
-            if (currencies.isEmpty()) {
-                throw new RuntimeException("Пока нет в бд");
-            }
+
+            return currencies.stream()
+                            .map(this::mapToDto)
+                            .collect(Collectors.toList());
+
         } catch (SQLException e) {
             unitOfWork.rollback();
-            throw new RuntimeException(e);
+            throw new TransactionException(ExceptionMessage.GET_CURRENCY_EXCEPTION, 500);
         }
-        return currencies;
     }
 
-    public Currency getCurrencyByCode(String code) {
-        Currency currency = null;
+    public CurrencyResponseDto getCurrencyByCode(String code) {
         try {
             unitOfWork.start();
             Connection connection = unitOfWork.getConnection();
             Optional<Currency> optionalCurrency = repository.getCurrencyByCode(code, connection);
-            if (optionalCurrency.isPresent()) {
-                currency = optionalCurrency.get();
+
+            if (optionalCurrency.isEmpty()) {
+                throw new TransactionException(ExceptionMessage.MISSING_CURRENCY, 404);
             }
+
+            Currency currency = optionalCurrency.get();
             unitOfWork.commit();
+            return mapToDto(currency);
+
         } catch (SQLException e) {
             unitOfWork.rollback();
-            throw new RuntimeException(e);
+            throw new TransactionException(ExceptionMessage.GET_CURRENCY_EXCEPTION, 500);
         }
-        return currency;
     }
 
-    public Currency createCurrency(CurrencyRequestDto currencyDto) {
-        Currency currency;
+    public CurrencyResponseDto createCurrency(CurrencyRequestDto currencyDto) {
         try {
             unitOfWork.start();
             Connection connection = unitOfWork.getConnection();
 
             Optional<Currency> existing = repository.getCurrencyByCode(currencyDto.code(), connection);
+
             if (existing.isPresent()) {
                 unitOfWork.rollback();
-                throw new RuntimeException("Currency already exists");
+                throw new TransactionException(ExceptionMessage.CURRENCY_ALREADY_EXISTS, 409);
             }
 
             Optional<Currency> savedCurrency = repository.addNewCurrency(
                     currencyDto.code(),
-                    currencyDto.fullName(),
+                    currencyDto.name(),
                     currencyDto.sign(),
                     connection);
-
             unitOfWork.commit();
 
-            currency = savedCurrency.get();
-
+            Currency currency = savedCurrency.get();
+            return mapToDto(currency);
         } catch (SQLException e) {
             unitOfWork.rollback();
-            throw new RuntimeException(e);
+            throw new TransactionException(ExceptionMessage.CREATING_CURRENCY_EXCEPTION, 500);
         }
+    }
 
-        return currency;
+    private CurrencyResponseDto mapToDto(Currency currency) {
+        return new CurrencyResponseDto(
+                currency.getId().toString(),
+                currency.getName(),
+                currency.getCode(),
+                currency.getSign());
     }
 }
